@@ -51,7 +51,7 @@ class ProductCreate(BaseModel):
     
      reorderlevel : int
     
-     discontinued : bool = Field(default=False);
+     discontinued : bool;
 
 
 

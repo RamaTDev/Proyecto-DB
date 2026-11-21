@@ -27,7 +27,7 @@ class ProductRouter:
         self._router.add_api_route('/{id}',self._getProductById,methods=['GET']);
         self._router.add_api_route('/',self._createProduct,methods=['POST']);
         self.router.add_api_route('/{id}',self._deleteProduct,methods=['DELETE']);
-        self.router.add_api_route('/{id}',self._updateProduct,methods=['PATCH']);
+        self.router.add_api_route('/{id}',self._updateProduct,methods=['PUT']);
 
     def _getProducts(self) -> JSONResponse:
         products : List[Product] = self._repository.findAll();
