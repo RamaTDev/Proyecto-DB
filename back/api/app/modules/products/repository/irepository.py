@@ -26,3 +26,9 @@ class IProductRepository(ABC):
     @abstractmethod
     def update(self, productid: ProductID,  product : ProductUpdate) -> Product | None:
         pass;
+
+    @abstractmethod
+    def activate(self, productid: ProductID) -> Product | None:
+        pass;
+
+    

@@ -136,4 +136,24 @@ class ProductRepository(IProductRepository):
 
         return prod;
 
+    def activate(self, productid: ProductID) -> Product | None:
+
+        prod : Product;
+
+        try:
+            sql : str = 'select * from fn_activateproduct(%s)';
+
+            row = self._db.execute_one(sql,(productid.productid,));
+
+            if row is not None:
+                prod = Product(**row);
+            else:
+                return None;
+
+            
+        except Error as e:
+            msg = e.diag.message_primary or 'Error en la base de datos';
+            raise DataBaseException(message=msg);
+
+        return prod;
 
