@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 from app.modules.products.repository.irepository import IProductRepository
-from app.modules.products.schemas import Product, ProductID, ProductCreate
+from app.modules.products.schemas import Product, ProductID, ProductCreate, ProductUpdate
 
 
 class ProductRouter:
@@ -64,10 +64,9 @@ class ProductRouter:
 
 
 
-    def _updateProduct(self, id: int, product: ProductCreate = Body()) -> JSONResponse:
+    def _updateProduct(self, id: int, product: ProductUpdate = Body()) -> JSONResponse:
 
-        aux : dict[str,Any] = product.model_dump();
-        prod : Product | None = self._repository.update(Product(productid=id,**aux));
+        prod : Product | None = self._repository.update(ProductID(productid=id), product=product);
 
         if prod is not None:
 

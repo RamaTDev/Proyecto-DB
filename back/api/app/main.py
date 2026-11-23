@@ -37,3 +37,4 @@ async def database_exception_handler(request: Request, exc: DataBaseException) -
             "detail": exc.message
         }
     )
+

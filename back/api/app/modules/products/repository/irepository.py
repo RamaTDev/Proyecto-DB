@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from app.modules.products.schemas import Product, ProductID, ProductCreate
+from app.modules.products.schemas import Product, ProductID, ProductCreate, ProductUpdate
 
 
 class IProductRepository(ABC):
@@ -24,5 +24,5 @@ class IProductRepository(ABC):
         pass;
 
     @abstractmethod
-    def update(self, product : Product) -> Product | None:
+    def update(self, productid: ProductID,  product : ProductUpdate) -> Product | None:
         pass;
