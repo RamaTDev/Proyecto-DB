@@ -1,6 +1,9 @@
 ========================================================
 CÓMO LEVANTAR LA API - Proyecto DB (FastAPI + PostgreSQL)
 ========================================================
+Actualizado después de integrar las ramas prod, suppliers y
+categories en master (PR #1 y PR #2 de GitHub).
+
 
 1) UBICACIÓN
 ------------
@@ -88,29 +91,73 @@ Con la API corriendo:
 Si levantás con --host 0.0.0.0, también podés entrar desde otra
 máquina con http://<IP_DE_LA_MAQUINA>:8000/docs.
 
-
-7) ENDPOINTS DISPONIBLES EN LA RAMA master
------------------------------------------
-Prefijo: /products
-
-    GET    /products/        -> lista todos los productos
-    GET    /products/{id}    -> busca un producto por ID
-    POST   /products/        -> crea un producto (body JSON)
-    PUT    /products/{id}    -> actualiza un producto (body JSON)
-    DELETE /products/{id}    -> elimina un producto
-
 El título de la documentación es "Produdcts" (así está escrito
 en app/main.py).
 
 
+7) ENDPOINTS DISPONIBLES EN MASTER
+----------------------------------
+En app/main.py están registrados los tres routers:
+
+    app.include_router(productRouter.router, prefix='/products')
+    app.include_router(supplierRouter.router, prefix='/suppliers')
+    app.include_router(categotyRouter.router, prefix='/categories')
+
+En Swagger aparecen los tags: products, suppliers y categories.
+
+--- PRODUCTS (prefix /products) ---------------------------------
+    GET    /products/              -> lista todos los productos
+    GET    /products/{id}          -> busca un producto por ID
+    POST   /products/              -> crea un producto
+    PUT    /products/{id}          -> actualiza un producto
+    DELETE /products/{id}          -> elimina (baja lógica) un producto
+    POST   /products/{id}/activate -> reactiva un producto
+
+    Body de POST /products/ (ProductCreate):
+        productname, supplierid, categoryid, quantityperunit,
+        unitprice, unitsinstock, unitsonorder, reorderlevel
+
+    Body de PUT /products/{id} (ProductUpdate):
+        los mismos campos más discontinued (bool)
+
+--- SUPPLIERS (prefix /suppliers) -------------------------------
+    GET    /suppliers/              -> lista todos los proveedores
+    GET    /suppliers/{id}          -> busca un proveedor por ID
+    POST   /suppliers/              -> crea un proveedor
+    PUT    /suppliers/{id}          -> actualiza un proveedor
+    DELETE /suppliers/{id}          -> elimina (baja lógica) un proveedor
+    POST   /suppliers/{id}/activate -> reactiva un proveedor
+
+    Body de POST y PUT (SupplierCreate / SupplierUpdate):
+        companyname, contactname, contacttitle, address, city,
+        region, postalcode, country, phone, fax, homepage
+
+--- CATEGORIES (prefix /categories) -----------------------------
+    GET    /categories/              -> lista todas las categorías
+    GET    /categories/{id}          -> busca una categoría por ID
+    POST   /categories/              -> crea una categoría
+    PUT    /categories/{id}          -> actualiza una categoría
+    DELETE /categories/{id}          -> elimina (baja lógica) una categoría
+    POST   /categories/{id}/activate -> reactiva una categoría
+
+    Body de POST y PUT (CategoryCreate):
+        categoryname, description, picture
+
+    Ojo: el repositorio devuelve un mensaje de texto en el campo
+    "message", no el objeto categoría completo como en products.
+
+
 8) OBSERVACIONES IMPORTANTES
 ----------------------------
-- En master solo está registrado el router de products. El módulo
-  view existe pero su router está vacío y no se incluye en main.py.
-- Las ramas prod, suppliers, categories y view tienen más código;
-  para usar esos endpoints hay que integrarlas en master y registrar
-  sus routers en app/main.py con app.include_router(...).
+- Los DELETE son lógicos: marcan discontinued/active en lugar de
+  borrar la fila. Los scripts de back/sql tienen triggers que
+  bloquean el borrado físico en categories.
+- POST /{id}/activate deshace esa baja lógica.
+- El módulo view existe en el historial pero su router está vacío
+  y NO está registrado en app/main.py, así que no tiene endpoints.
 - Los errores de base de datos se devuelven con status 400 y el
   mensaje en el campo "detail".
 - El .env, .venv, __pycache__ y .vscode están en .gitignore: no se
   suben al repositorio.
+- Si venís de una copia anterior del repo, hacé git pull: master
+  ahora está en el commit de los merges (de2daf7).
