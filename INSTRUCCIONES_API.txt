@@ -2,7 +2,7 @@
 CÓMO LEVANTAR LA API - Proyecto DB (FastAPI + PostgreSQL)
 ========================================================
 Actualizado después de integrar las ramas prod, suppliers y
-categories en master (PR #1 y PR #2 de GitHub).
+categories en master (PR #1 y PR #2) y de habilitar CORS.
 
 
 1) UBICACIÓN
@@ -160,4 +160,47 @@ En Swagger aparecen los tags: products, suppliers y categories.
 - El .env, .venv, __pycache__ y .vscode están en .gitignore: no se
   suben al repositorio.
 - Si venís de una copia anterior del repo, hacé git pull: master
-  ahora está en el commit de los merges (de2daf7).
+  ya incluye los merges y el commit de CORS (ac8a165).
+
+
+9) CORS - EN DÓNDE DEBE CORRER EL FRONT
+---------------------------------------
+La API habilitó CORSMiddleware en app/main.py. El navegador
+permite la llamada solo si el origen (esquema + host + puerto)
+coincide exactamente con uno de estos:
+
+    Live Server (VS Code):   http://127.0.0.1:5500
+                             http://localhost:5500
+
+    Vite / React:            http://127.0.0.1:5173
+                             http://localhost:5173
+
+    CRA / Next (opcional):   http://127.0.0.1:3000
+                             http://localhost:3000
+
+La API corre en http://127.0.0.1:8000 (sección 5). Desde el
+front las llamadas deben apuntar a ese puerto, por ejemplo:
+
+    fetch('http://127.0.0.1:8000/products/')
+
+No abras el index.html con doble clic (file://): el navegador
+reporta el origen como "null" y CORS no lo acepta. Usá Live
+Server (5500) o npm run dev (5173).
+
+Si cambiás el puerto del front, agregalo a allow_origins en
+back/api/app/main.py. Con --reload la API se reinicia sola;
+si no, reiniciala manualmente.
+
+Verificación rápida del preflight:
+
+    curl -i -X OPTIONS \
+      -H "Origin: http://127.0.0.1:5500" \
+      -H "Access-Control-Request-Method: GET" \
+      http://127.0.0.1:8000/products/
+
+Debe devolver Access-Control-Allow-Origin: http://127.0.0.1:5500
+y Access-Control-Allow-Credentials: true.
+
+allow_credentials=True permite enviar cookies/Authorization,
+por eso no se usa "*" en allow_origins. Cualquier otro puerto
+(por ejemplo 8080) queda rechazado hasta agregarlo a la lista.
