@@ -1,0 +1,116 @@
+========================================================
+CÓMO LEVANTAR LA API - Proyecto DB (FastAPI + PostgreSQL)
+========================================================
+
+1) UBICACIÓN
+------------
+El código de la API está en:
+    /home/rama/Documentos/proyectodb/back/api
+
+Todos los comandos de abajo se ejecutan dentro de esa carpeta:
+    cd /home/rama/Documentos/proyectodb/back/api
+
+
+2) REQUISITOS PREVIOS
+---------------------
+- Python 3.10 o superior (en esta máquina hay Python 3.14.10).
+- PostgreSQL en ejecución y accesible desde la máquina.
+- La base de datos ya creada. Los scripts de back/sql crean
+  funciones/triggers y ALTER TABLE, por lo que asumen que las
+  tablas (products, categories, suppliers, etc.) ya existen.
+
+
+3) ARCHIVO .env (NO se sube a Git)
+---------------------------------
+Dentro de back/api tiene que existir un archivo .env con estas
+5 variables (usá tus propios valores):
+
+    POSTGRES_HOST=localhost
+    POSTGRES_PORT=5432
+    POSTGRES_DB=<nombre_de_la_base>
+    POSTGRES_USER=<usuario>
+    POSTGRES_PASSWORD=<contraseña>
+
+Si falta alguna, POSTGRES_HOST y POSTGRES_PORT por defecto son
+localhost y 5432, pero POSTGRES_DB / USER / PASSWORD son
+obligatorios.
+
+Opcionalmente podés aplicar los scripts SQL con:
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/categories.sql
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/products.sql
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/suppliers.sql
+
+
+4) ENTORNO VIRTUAL
+------------------
+El .venv que venía en la carpeta tiene las rutas viejas del
+proyecto (apunta a /proyectodb/api/.venv), así que conviene
+recrearlo:
+
+    cd /home/rama/Documentos/proyectodb/back/api
+    rm -rf .venv
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
+
+En Windows sería: .venv\Scripts\activate
+
+
+5) LEVANTAR LA API
+------------------
+Con el entorno activado y estando en back/api:
+
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+--reload reinicia el servidor al cambiar archivos (solo desarrollo).
+Para production, quitá --reload.
+
+La API intenta conectarse a PostgreSQL apenas se importa
+(app/main.py llama a database.connect()), así que si la base no
+está disponible o las credenciales están mal, el servidor no
+arranca.
+
+
+6) DOCUMENTACIÓN (Swagger / OpenAPI)
+------------------------------------
+Con la API corriendo:
+
+    Documentación interactiva (Swagger UI):
+        http://127.0.0.1:8000/docs
+
+    Documentación alternativa (ReDoc):
+        http://127.0.0.1:8000/redoc
+
+    Especificación OpenAPI en JSON:
+        http://127.0.0.1:8000/openapi.json
+
+Si levantás con --host 0.0.0.0, también podés entrar desde otra
+máquina con http://<IP_DE_LA_MAQUINA>:8000/docs.
+
+
+7) ENDPOINTS DISPONIBLES EN LA RAMA master
+-----------------------------------------
+Prefijo: /products
+
+    GET    /products/        -> lista todos los productos
+    GET    /products/{id}    -> busca un producto por ID
+    POST   /products/        -> crea un producto (body JSON)
+    PUT    /products/{id}    -> actualiza un producto (body JSON)
+    DELETE /products/{id}    -> elimina un producto
+
+El título de la documentación es "Produdcts" (así está escrito
+en app/main.py).
+
+
+8) OBSERVACIONES IMPORTANTES
+----------------------------
+- En master solo está registrado el router de products. El módulo
+  view existe pero su router está vacío y no se incluye en main.py.
+- Las ramas prod, suppliers, categories y view tienen más código;
+  para usar esos endpoints hay que integrarlas en master y registrar
+  sus routers en app/main.py con app.include_router(...).
+- Los errores de base de datos se devuelven con status 400 y el
+  mensaje en el campo "detail".
+- El .env, .venv, __pycache__ y .vscode están en .gitignore: no se
+  suben al repositorio.
