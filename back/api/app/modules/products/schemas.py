@@ -66,7 +66,7 @@ class ProductUpdate(BaseModel):
 
     reorderlevel : int | None
 
-    discontinued : bool | None
+    discontinued : bool 
 
 
 class ProductID(BaseModel):
