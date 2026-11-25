@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 class View(BaseModel):
 
-    productid: int
+    productid: int 
 
     product: str 
 
@@ -24,23 +24,19 @@ class View(BaseModel):
     active: bool
 
 
-
 class ViewFilter(BaseModel):
 
-    product: str | None  = Field(None);
-    category: str | None = Field(None);
-    discontinued: bool | None = Field(None);
+    productname : str | None = Field(None, description='Filtra por nombre de producto');
 
+    categoryname : str | None = Field(None, description='Filtra por nombre de categoria');
 
-    stock_min: int | None = Field(None,ge=0,description='Stock mayor o igual a 0');
-    stock_max: int | None = Field(None,ge=0,description='Stock menot o igual a 0');
+    discontinued : bool | None = Field(None, description='Filtra por descontinuados o no');
 
+    stockmin : int | None = Field(None, ge=0 , description='Filtra por productos con stock menores o iguales')
 
-    price_min: int | None = Field(None,ge=0,description='Precio mayor o igual a 0');
-    price_max: int | None = Field(None,ge=0,description='Precio menor o igual a 0');
+    stockmax : int | None = Field(None, ge=0, description='Filtra por productos con stock mayores o iguales')
 
+    pricemin : Decimal | None = Field(None,ge=0,description='Filtra por precios menores o iguales')
 
+    pricemax : Decimal | None  = Field(None,ge=0, description='Filtra por precios mayores o iguales ')
 
-
-
- 
