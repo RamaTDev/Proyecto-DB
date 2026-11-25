@@ -34,51 +34,51 @@ class Supplier(BaseModel):
 
 class SupplierCreate(BaseModel):
 
-    companyname: str
+    companyname: str | None
     
-    contactname: str
+    contactname: str | None
     
-    contacttitle: str
+    contacttitle: str | None
     
-    address: str
+    address: str | None
     
-    city: str
+    city: str | None
     
-    region: str
+    region: str | None
     
-    postalcode: str
+    postalcode: str | None
     
-    country: str
+    country: str | None
     
-    phone: str
+    phone: str | None
     
-    fax: str
+    fax: str | None
     
-    homepage: str
+    homepage: str | None
 
 class SupplierUpdate(BaseModel):
     
-    companyname: str
+    companyname: str | None
     
-    contactname: str
+    contactname: str | None
     
-    contacttitle: str
+    contacttitle: str | None
     
-    address: str
+    address: str | None
     
-    city: str
+    city: str | None
     
-    region: str
+    region: str | None
     
-    postalcode: str
+    postalcode: str | None
     
-    country: str
+    country: str | None
     
-    phone: str
+    phone: str | None
     
-    fax: str
+    fax: str | None
     
-    homepage: str
+    homepage: str | None
 
 
 

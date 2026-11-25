@@ -31,42 +31,42 @@ class Product(BaseModel):
 
 class ProductCreate(BaseModel):
 
-    productname : str
+    productname : str | None;
     
-    supplierid : int
+    supplierid : int | None
     
-    categoryid :int
+    categoryid :int | None
     
-    quantityperunit : str
+    quantityperunit : str | None
     
-    unitprice : Decimal
+    unitprice : Decimal | None
     
-    unitsinstock : int
+    unitsinstock : int | None
     
-    unitsonorder : int
+    unitsonorder : int | None
     
-    reorderlevel : int
+    reorderlevel : int | None
 
 
 class ProductUpdate(BaseModel):
 
-    productname : str
+    productname : str | None
 
-    supplierid : int
+    supplierid : int | None
 
-    categoryid :int
+    categoryid :int | None
 
-    quantityperunit : str
+    quantityperunit : str | None
 
-    unitprice : Decimal
+    unitprice : Decimal | None
 
-    unitsinstock : int
+    unitsinstock : int | None
 
-    unitsonorder : int
+    unitsonorder : int | None
 
-    reorderlevel : int
+    reorderlevel : int | None
 
-    discontinued : bool
+    discontinued : bool | None
 
 
 class ProductID(BaseModel):
