@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proveedores · Gestión de stock</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/proveedores.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand">Gestión de stock</span>
+      <nav class="nav">
+        <a href="index.html">Productos</a>
+        <a href="proveedores.html" class="active">Proveedores</a>
+        <a href="categorias.html">Categorías</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="message" class="message" hidden></div>
+
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1>Proveedores</h1>
+        <p class="subtitle">Alta, modificación, baja y reactivación de proveedores.</p>
+      </div>
+      <button id="btn-new" class="btn btn-primary">+ Nuevo proveedor</button>
+    </div>
+
+    <section id="form-card" class="card" hidden>
+      <h2 id="form-title">Nuevo proveedor</h2>
+      <form id="supplier-form" class="form-grid" novalidate>
+        <label class="field span-2">Empresa
+          <input name="companyname" type="text">
+        </label>
+        <label class="field">Contacto
+          <input name="contactname" type="text">
+        </label>
+        <label class="field">Cargo del contacto
+          <input name="contacttitle" type="text">
+        </label>
+
+        <label class="field span-2">Dirección
+          <input name="address" type="text">
+        </label>
+        <label class="field">Ciudad
+          <input name="city" type="text">
+        </label>
+        <label class="field">Región
+          <input name="region" type="text">
+        </label>
+
+        <label class="field">Código postal
+          <input name="postalcode" type="text">
+        </label>
+        <label class="field">País
+          <input name="country" type="text">
+        </label>
+        <label class="field">Teléfono
+          <input name="phone" type="tel" placeholder="Ej: (171) 555-2222">
+        </label>
+        <label class="field">Fax
+          <input name="fax" type="text">
+        </label>
+
+        <label class="field span-all">Página web
+          <input name="homepage" type="text">
+        </label>
+
+        <div class="form-actions">
+          <button type="button" id="btn-cancel" class="btn">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Buscar por empresa, contacto, ciudad o país…">
+        <select id="filter-status">
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Dados de baja</option>
+        </select>
+        <span id="count" class="muted"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num">ID</th>
+              <th>Empresa</th>
+              <th>Contacto</th>
+              <th>Ciudad</th>
+              <th>País</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="8" class="empty">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

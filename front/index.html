@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos · Gestión de stock</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/productos.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand">Gestión de stock</span>
+      <nav class="nav">
+        <a href="index.html" class="active">Productos</a>
+        <a href="proveedores.html">Proveedores</a>
+        <a href="categorias.html">Categorías</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="message" class="message" hidden></div>
+
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1>Productos</h1>
+        <p class="subtitle">Alta, modificación, baja y reactivación de productos.</p>
+      </div>
+      <button id="btn-new" class="btn btn-primary">+ Nuevo producto</button>
+    </div>
+
+    <section id="form-card" class="card" hidden>
+      <h2 id="form-title">Nuevo producto</h2>
+      <form id="product-form" class="form-grid" novalidate>
+        <label class="field span-2">Nombre
+          <input name="productname" type="text">
+        </label>
+        <label class="field">Proveedor
+          <select name="supplierid"></select>
+        </label>
+        <label class="field">Categoría
+          <select name="categoryid"></select>
+        </label>
+
+        <label class="field span-2">Cantidad por unidad
+          <input name="quantityperunit" type="text" placeholder="Ej: 10 cajas x 20 bolsas">
+        </label>
+        <label class="field">Precio unitario
+          <input name="unitprice" type="number" step="0.01">
+        </label>
+        <label class="field">Stock
+          <input name="unitsinstock" type="number" step="1">
+        </label>
+
+        <label class="field">Unidades en pedido
+          <input name="unitsonorder" type="number" step="1">
+        </label>
+        <label class="field">Nivel de reposición
+          <input name="reorderlevel" type="number" step="1">
+        </label>
+        <label id="discontinued-field" class="field checkbox" hidden>
+          <input name="discontinued" type="checkbox"> Descontinuado
+        </label>
+
+        <div class="form-actions">
+          <button type="button" id="btn-cancel" class="btn">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Buscar por nombre…">
+        <select id="filter-status">
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Dados de baja</option>
+        </select>
+        <span id="count" class="muted"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num">ID</th>
+              <th>Nombre</th>
+              <th>Proveedor</th>
+              <th>Categoría</th>
+              <th>Cant. por unidad</th>
+              <th class="num">Precio</th>
+              <th class="num">Stock</th>
+              <th class="num">En pedido</th>
+              <th class="num">Reposición</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="11" class="empty">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
