@@ -16,7 +16,7 @@ La lógica de negocio —validaciones, altas, bajas lógicas y reactivaciones—
 | Tabla | Baja lógica (soft delete) | Trigger |
 | --- | --- | --- |
 | `products` | `active = false` | `tg_validateproduct` |
-| `suppliers` | `active = false` (descontinúa sus productos) | `tg_validatesupplier` |
+| `suppliers` | `active = false`  | `tg_validatesupplier` |
 | `categories` | `discontinued = true` (prohíbe borrado físico) | `trg_am_categorias` |
 
 Scripts en `back/sql/`:
