@@ -32,11 +32,11 @@ class ViewFilter(BaseModel):
 
     discontinued : bool | None = Field(None, description='Filtra por descontinuados o no');
 
-    stockmin : int | None = Field(None, ge=0 , description='Filtra por productos con stock menores o iguales')
+    stockmin : int | None = Field(None, ge=0 , description='stock menores a un limite ');
 
-    stockmax : int | None = Field(None, ge=0, description='Filtra por productos con stock mayores o iguales')
+    stockmax : int | None = Field(None, ge=0, description='stock mayores a un limite');
 
-    pricemin : Decimal | None = Field(None,ge=0,description='Filtra por precios menores o iguales')
+    pricemin : Decimal | None = Field(None,ge=0,description='precios menores o iguales a un limite');
 
-    pricemax : Decimal | None  = Field(None,ge=0, description='Filtra por precios mayores o iguales ')
+    pricemax : Decimal | None  = Field(None,ge=0, description='precios mayores o iguales a un limite');
 
