@@ -63,3 +63,12 @@ export const createCategory = (category)     => apiRequest('POST',   '/categorie
 export const updateCategory = (id, category) => apiRequest('PUT',    `/categories/${id}`, category);
 export const deleteCategory = (id)           => apiRequest('DELETE', `/categories/${id}`);
 export const activateCategory = (id)         => apiRequest('POST',   `/categories/${id}`);
+
+export async function getResumen(filters) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== '') params.append(key, value);
+  }
+  const data = await apiRequest('GET', `/view/?${params}`);
+  return data.filter;
+}

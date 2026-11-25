@@ -14,6 +14,11 @@ export function showMessage(text, type = 'success') {
   }
 }
 
+export function hideMessage() {
+  clearTimeout(hideTimer);
+  document.getElementById('message').hidden = true;
+}
+
 export function escapeHtml(value) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   return String(value ?? '').replace(/[&<>"']/g, (ch) => map[ch]);
