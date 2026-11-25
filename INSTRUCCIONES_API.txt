@@ -1,8 +1,8 @@
 ========================================================
 CÓMO LEVANTAR LA API - Proyecto DB (FastAPI + PostgreSQL)
 ========================================================
-Actualizado después de integrar las ramas prod, suppliers y
-categories en master (PR #1 y PR #2) y de habilitar CORS.
+Actualizado después de integrar las ramas prod, suppliers,
+categories y view en master (PR #1, #2 y #3) y de habilitar CORS.
 
 
 1) UBICACIÓN
@@ -97,13 +97,14 @@ en app/main.py).
 
 7) ENDPOINTS DISPONIBLES EN MASTER
 ----------------------------------
-En app/main.py están registrados los tres routers:
+En app/main.py están registrados los cuatro routers:
 
     app.include_router(productRouter.router, prefix='/products')
+    app.include_router(viewRouter.router, prefix='/view')
     app.include_router(supplierRouter.router, prefix='/suppliers')
     app.include_router(categotyRouter.router, prefix='/categories')
 
-En Swagger aparecen los tags: products, suppliers y categories.
+En Swagger aparecen los tags: products, views, suppliers y categories.
 
 --- PRODUCTS (prefix /products) ---------------------------------
     GET    /products/              -> lista todos los productos
@@ -146,6 +147,39 @@ En Swagger aparecen los tags: products, suppliers y categories.
     Ojo: el repositorio devuelve un mensaje de texto en el campo
     "message", no el objeto categoría completo como en products.
 
+--- VIEWS (prefix /view, tag "views") ----------------------------
+    GET    /view/    -> filtra la vista con todos los parámetros
+                       opcionales como query params
+
+    Parámetros de query (todos opcionales):
+        productname : str  -> filtra por nombre de producto
+        categoryname: str  -> filtra por nombre de categoría
+        discontinued: bool -> filtra por descontinuados / activos
+        stockmin    : int  -> stock mínimo (ge=0)
+        stockmax    : int  -> stock máximo (ge=0)
+        pricemin    : dec  -> precio mínimo (ge=0)
+        pricemax    : dec  -> precio máximo (ge=0)
+
+    Ejemplo:
+        http://127.0.0.1:8000/view/?productname=Laptop&categoryname=Electrónica&discontinued=false&stockmin=5&stockmax=100&pricemin=1000&pricemax=9000
+
+    Respuesta:
+        {"filter": [ { "productid": 1, "product": "...",
+                        "price": "...", "stock": 10,
+                        "category": "...", "supplier": "...",
+                        "discontinued": false, "active": true }, ... ]}
+
+    Internamente llama a la funcion de PostgreSQL fn_filterView(
+    p_product, p_category, p_discontinued, p_stockmin, p_stockmax,
+    p_pricemin, p_pricemax). Esa funcion NO está en los scripts de
+    back/sql: tiene que existir en la base de datos.
+
+    Los filtros numericos validan solo que sean >= 0 (422 si son
+    negativos). Hoy no se valida que min <= max: un rango invertido
+    simplemente devuelve 0 filas. Las descripciones de Swagger para
+    stockmin/stockmax y pricemin/pricemax están invertidas; el
+    comportamiento real lo define fn_filterView.
+
 
 8) OBSERVACIONES IMPORTANTES
 ----------------------------
@@ -153,14 +187,15 @@ En Swagger aparecen los tags: products, suppliers y categories.
   borrar la fila. Los scripts de back/sql tienen triggers que
   bloquean el borrado físico en categories.
 - POST /{id}/activate deshace esa baja lógica.
-- El módulo view existe en el historial pero su router está vacío
-  y NO está registrado en app/main.py, así que no tiene endpoints.
+- El módulo view ya está integrado: tiene el endpoint GET /view/
+  y su router se registra en app/main.py (PR #3).
 - Los errores de base de datos se devuelven con status 400 y el
   mensaje en el campo "detail".
 - El .env, .venv, __pycache__ y .vscode están en .gitignore: no se
   suben al repositorio.
 - Si venís de una copia anterior del repo, hacé git pull: master
-  ya incluye los merges y el commit de CORS (ac8a165).
+  ya incluye los merges (PR #1, #2 y #3) y el commit de CORS.
+  El tip actual antes de esta documentación es ef89bd8.
 
 
 9) CORS - EN DÓNDE DEBE CORRER EL FRONT
@@ -182,6 +217,7 @@ La API corre en http://127.0.0.1:8000 (sección 5). Desde el
 front las llamadas deben apuntar a ese puerto, por ejemplo:
 
     fetch('http://127.0.0.1:8000/products/')
+    fetch('http://127.0.0.1:8000/view/?stockmin=5')
 
 No abras el index.html con doble clic (file://): el navegador
 reporta el origen como "null" y CORS no lo acepta. Usá Live
