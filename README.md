@@ -1,117 +1,136 @@
-# GESTIÓN DE STOCK — Proyecto DB
+# ABM - Base de Datos
 
-PostgreSQL + API REST (FastAPI) + front web (HTML, CSS y JavaScript)  
+ABM con **soft delete** de las tablas `products`, `suppliers` y `categories`. PostgreSQL + API REST (FastAPI) + front web (HTML, CSS y JavaScript).  
 Última actualización: 25/11/2026
 
-Sistema para administrar **productos, proveedores y categorías**. Las reglas de negocio (datos obligatorios, nombres únicos, bajas lógicas) están en la base de datos, la API las publica por HTTP y el front las usa desde el navegador.
+La lógica de negocio —validaciones, altas, bajas lógicas y reactivaciones— está **en el servidor de PostgreSQL**, en las funciones y triggers de [`back/sql/`](back/sql/). La API y el front son parte del proyecto y consumen esa lógica, pero el eje de este README es la base de datos.
 
-![Arquitectura del proyecto: front, API y base de datos](arquitectura.png)
+**Para levantar el proyecto basta con volcar `back/db/products.dump`** en PostgreSQL: el dump trae las tablas con datos, las 15 funciones, los 3 triggers y la vista `vw_resumen`.
+
+<img src="arquitectura.png" width="900" alt="Arquitectura: front, API y base de datos">
 
 > Front `:5500` → API FastAPI `:8000` → PostgreSQL `:5432`.
 
-## Qué incluye
+## Base de datos (contenido principal)
 
-- **Base `products`**: 3 tablas, 15 funciones, 3 triggers y la vista `vw_resumen`. Scripts en `back/sql/` y dump en `back/db/products.dump`.
-- **API REST**: `/products`, `/suppliers`, `/categories` y `/view`. Documentación interactiva en `http://127.0.0.1:8000/docs`.
-- **Front**: 4 páginas sin frameworks: Productos, Proveedores, Categorías y Resumen.
+| Tabla | Baja lógica (soft delete) | Trigger |
+| --- | --- | --- |
+| `products` | `active = false` | `tg_validateproduct` |
+| `suppliers` | `active = false` (descontinúa sus productos) | `tg_validatesupplier` |
+| `categories` | `discontinued = true` (prohíbe borrado físico) | `trg_am_categorias` |
+
+Scripts en `back/sql/`:
+
+- **`categories.sql`**: agrega la columna `discontinued`, el trigger `trg_am_categorias` y la función `fn_abmr_categorias` (alta, baja, modificación y reactivación).
+- **`suppliers.sql`**: trigger `tg_validatesupplier` y funciones de inserción, modificación, baja y reactivación.
+- **`products.sql`**: trigger `tg_validateproduct` y funciones de inserción, modificación, baja y reactivación.
+- **`view.sql`**: vista `vw_resumen` y función `fn_filterView` (filtros del resumen).
 
 ## Estructura
 
 ```text
 Proyecto-DB/
-├── README.md, readme.txt   este resumen
-├── INSTRUCCIONES_API.txt   guía completa de la API
-├── arquitectura.png        diagrama
-├── capturas/               8 capturas del front
+├── README.md                 este resumen
+├── INSTRUCCIONES_API.txt     guía completa de la API
 ├── back/
-│   ├── db/products.dump    backup de la base
-│   ├── sql/                categories, suppliers, products y view
-│   └── api/                FastAPI (app/main.py, app/modules/, .env)
-└── front/                  index, proveedores, categorías y resumen
+│   ├── db/products.dump      volcado de la base (tablas, datos y SQL)
+│   ├── sql/                  lógica de negocio: funciones y triggers
+│   │   categories.sql, suppliers.sql, products.sql, view.sql
+│   └── api/                  API FastAPI (consume la base)
+├── front/                    páginas HTML/CSS/JS (consumen la API)
+├── capturas/                 8 capturas del front
+└── arquitectura.png          diagrama
 ```
 
 ## Puesta en marcha
 
-1. **Base de datos**: crear `products` y ejecutar en este orden:
+### 1. Base de datos (lo único imprescindible)
 
-   ```bash
-   psql -h localhost -U <usuario> -d products -f back/sql/categories.sql
-   psql -h localhost -U <usuario> -d products -f back/sql/suppliers.sql
-   psql -h localhost -U <usuario> -d products -f back/sql/products.sql
-   psql -h localhost -U <usuario> -d products -f back/sql/view.sql
-   ```
+Con la base `products` creada:
 
-   También se puede restaurar el dump: `pg_restore -d products back/db/products.dump`.
+```bash
+pg_restore -h localhost -U <usuario> -d products back/db/products.dump
+```
 
-2. **API** (desde `back/api`, Python 3.11+):
+Como alternativa, se pueden ejecutar los scripts en este orden:
 
-   ```bash
-   py -3.13 -m venv .venv
-   .venv\Scripts\python.exe -m pip install -r requirements.txt
-   .venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-   ```
+```bash
+psql -h localhost -U <usuario> -d products -f back/sql/categories.sql
+psql -h localhost -U <usuario> -d products -f back/sql/suppliers.sql
+psql -h localhost -U <usuario> -d products -f back/sql/products.sql
+psql -h localhost -U <usuario> -d products -f back/sql/view.sql
+```
 
-   Crear `back/api/.env` con `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` y `POSTGRES_PASSWORD` (no se sube a GitHub). En Linux usar `python3` y `.venv/bin/`.
+### 2. API (opcional, para usar el front)
 
-3. **Front**: abrir `front/index.html` con Live Server en `http://127.0.0.1:5500` (o `python3 -m http.server 5500` dentro de `front/`). Abrir con doble clic no funciona por CORS.
+Desde `back/api`, con Python 3.11 o superior:
+
+```bash
+py -3.13 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Crear `back/api/.env` con `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` y `POSTGRES_PASSWORD` (no se sube a GitHub). En Linux usar `python3` y `.venv/bin/`.
+
+### 3. Front (opcional)
+
+Abrir `front/index.html` con Live Server en `http://127.0.0.1:5500` (o `python3 -m http.server 5500` dentro de `front/`). Abrir con doble clic no funciona por CORS.
 
 ## Capturas
 
-### Productos
+<details>
+<summary>Productos (3 capturas)</summary>
 
-![Listado de productos con nombre, proveedor, categoría, precio y estado](capturas/01-productos.png)
+<img src="capturas/01-productos.png" width="700" alt="Listado de productos con proveedor, categoría, precio y estado">
 
-![Formulario de edición de un producto](capturas/02-producto-editar.png)
+<img src="capturas/02-producto-editar.png" width="720" alt="Formulario de edición de un producto">
 
-![Error devuelto por la base al guardar un precio inválido](capturas/03-error-de-la-base.png)
+<img src="capturas/03-error-de-la-base.png" width="720" alt="Error devuelto por la base al guardar un precio inválido">
 
-### Proveedores
+</details>
 
-![Listado de proveedores](capturas/04-proveedores.png)
+<details>
+<summary>Proveedores (2 capturas)</summary>
 
-![Formulario de alta de un proveedor](capturas/05-proveedor-nuevo.png)
+<img src="capturas/04-proveedores.png" width="720" alt="Listado de proveedores">
 
-### Categorías
+<img src="capturas/05-proveedor-nuevo.png" width="720" alt="Formulario de alta de un proveedor">
 
-![Listado de categorías](capturas/06-categorias.png)
+</details>
 
-### Resumen
+<details>
+<summary>Categorías (1 captura)</summary>
 
-![Vista resumen de productos](capturas/07-resumen.png)
+<img src="capturas/06-categorias.png" width="720" alt="Listado de categorías">
 
-![Resumen con filtros combinados](capturas/08-resumen-filtros.png)
+</details>
 
-## API REST
+<details>
+<summary>Resumen (2 capturas)</summary>
 
-Base: `http://127.0.0.1:8000` · Swagger: `/docs` · Respuestas en JSON.
+<img src="capturas/07-resumen.png" width="700" alt="Vista resumen de productos">
 
-| Método | Ruta | Uso |
-| --- | --- | --- |
-| GET / POST | `/products/` | listar / crear |
-| GET / PUT / DELETE | `/products/{id}` | buscar / modificar / dar de baja |
-| POST | `/products/{id}/activate` | reactivar |
-| GET / POST | `/suppliers/` | listar / crear |
-| GET / PUT / DELETE | `/suppliers/{id}` | buscar / modificar / dar de baja |
-| POST | `/suppliers/{id}/activate` | reactivar |
-| GET / POST | `/categories/` | listar / crear |
-| GET / PUT / DELETE | `/categories/{id}` | buscar / modificar / dar de baja |
-| POST | `/categories/{id}` | reactivar |
-| GET | `/view/` | resumen filtrado |
+<img src="capturas/08-resumen-filtros.png" width="720" alt="Resumen con filtros combinados">
 
-`GET /view/` acepta `productname`, `categoryname`, `discontinued`, `stockmin`, `stockmax`, `pricemin` y `pricemax`. Ojo: `min` es tope (`<=`) y `max` es piso (`>=`), según `fn_filterView`. Ejemplo: `/view/?stockmax=5&stockmin=100` devuelve stock entre 5 y 100.
+</details>
 
-Detalle completo de campos y respuestas: `INSTRUCCIONES_API.txt`.
+## API REST (resumen)
 
-## Base de datos
+Base: `http://127.0.0.1:8000` · Swagger: `/docs` · Respuestas en JSON. La API publica lo que ya resolvió la base; no implementa reglas de negocio propias.
 
-- `products`: alta, baja lógica (`active`), edición y reactivación. Trigger `tg_validateproduct`.
-- `suppliers`: baja lógica descontinúa sus productos. Trigger `tg_validatesupplier`.
-- `categories`: baja lógica con `discontinued` y bloqueo de borrado físico. Trigger `trg_am_categorias`.
-- `vw_resumen` + `fn_filterView` alimentan la página Resumen y `/view`.
+| Recurso | Rutas principales |
+| --- | --- |
+| `/products` | listar, crear, buscar, modificar, baja lógica y reactivar |
+| `/suppliers` | listar, crear, buscar, modificar, baja lógica y reactivar |
+| `/categories` | listar, crear, buscar, modificar, baja lógica y reactivar |
+| `/view` | resumen filtrado (`vw_resumen` + `fn_filterView`) |
+
+En `/view/`, `min` es tope (`<=`) y `max` es piso (`>=`), según `fn_filterView`. Detalle completo de campos y respuestas: `INSTRUCCIONES_API.txt`.
 
 ## A tener en cuenta
 
-- Dar de baja no borra la fila: la reactivación la devuelve al estado activo.
-- `discontinued` no es lo mismo que inactivo: el producto sigue activo pero no se le aumenta stock.
-- Los mensajes de error del front vienen directamente de los `RAISE EXCEPTION` de PostgreSQL.
-- La API abre una conexión al arrancar: si se reinicia PostgreSQL, reiniciar también la API.
+- Dar de baja no borra la fila: es soft delete y se puede reactivar.
+- `discontinued` no es lo mismo que inactivo: el producto sigue activo pero no se le aumenta stock ni unidades en pedido.
+- Los mensajes de error del front son los `RAISE EXCEPTION` de PostgreSQL.
+- La API abre una sola conexión al arrancar: si se reinicia PostgreSQL, reiniciar también la API.
