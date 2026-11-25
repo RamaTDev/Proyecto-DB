@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categorías · Gestión de stock</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/categorias.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand">Gestión de stock</span>
+      <nav class="nav">
+        <a href="index.html">Productos</a>
+        <a href="proveedores.html">Proveedores</a>
+        <a href="categorias.html" class="active">Categorías</a>
+        <a href="resumen.html">Resumen</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="message" class="message" hidden></div>
+
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1>Categorías</h1>
+        <p class="subtitle">Alta, modificación, baja y reactivación de categorías.</p>
+      </div>
+      <button id="btn-new" class="btn btn-primary">+ Nueva categoría</button>
+    </div>
+
+    <section id="form-card" class="card" hidden>
+      <h2 id="form-title">Nueva categoría</h2>
+      <form id="category-form" class="form-grid" novalidate>
+        <label class="field span-2">Nombre
+          <input name="categoryname" type="text">
+        </label>
+        <label class="field span-2">Imagen
+          <input name="picture" type="text" placeholder="URL o nombre de archivo">
+        </label>
+        <label class="field span-all">Descripción
+          <textarea name="description"></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button type="button" id="btn-cancel" class="btn">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Buscar por nombre o descripción…">
+        <select id="filter-status">
+          <option value="all">Todas</option>
+          <option value="active">Activas</option>
+          <option value="inactive">Dadas de baja</option>
+        </select>
+        <span id="count" class="muted"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num">ID</th>
+              <th>Imagen</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="6" class="empty">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
