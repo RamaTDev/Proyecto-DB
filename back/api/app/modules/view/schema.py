@@ -22,26 +22,4 @@ class View(BaseModel):
     discontinuado: bool
 
 
-class ProductName(BaseModel):
-
-    name : str
-
-
-class CategoryName(BaseModel):
-
-    name: str
-
-
-class Stock(BaseModel):
-
-    stock: int
-
-
-class StockRange(BaseModel):
-
-    gt : int
-
-    lt : int
-
-
  
