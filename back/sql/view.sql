@@ -19,8 +19,8 @@ create or replace function fn_filterView(
 	p_discontinued bool default null,
 	p_stockmin int default null,
 	p_stockmax int default null,
-	p_pricemin int default null,
-	p_pricemax int default null
+	p_pricemin numeric default null,
+	p_pricemax numeric default null
 )
 returns setof vw_resumen as $$
 declare
@@ -53,8 +53,8 @@ begin
 		stmt := stmt || format(' and vr.price >= %L',p_pricemax);
 	end if;
 
-      stmt := stmt || ' order by vr.product';
-return query execute stmt;
+    stmt := stmt || ' order by vr.product';
+    return query execute stmt;
 end;
 $$
 language plpgsql;
