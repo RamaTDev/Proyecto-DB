@@ -42,27 +42,12 @@ Opcionalmente podés aplicar los scripts SQL con:
     psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/categories.sql
     psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/products.sql
     psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/suppliers.sql
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/view.sql
 
 
-4) ENTORNO VIRTUAL
+4) LEVANTAR LA API
 ------------------
-El .venv que venía en la carpeta tiene las rutas viejas del
-proyecto (apunta a /proyectodb/api/.venv), así que conviene
-recrearlo:
-
-    cd /home/rama/Documentos/proyectodb/back/api
-    rm -rf .venv
-    python3 -m venv .venv
-    source .venv/bin/activate
-    python -m pip install --upgrade pip
-    python -m pip install -r requirements.txt
-
-En Windows sería: .venv\Scripts\activate
-
-
-5) LEVANTAR LA API
-------------------
-Con el entorno activado y estando en back/api:
+Estando en back/api (con el entorno virtual activado, si usás uno):
 
     uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
@@ -75,7 +60,7 @@ está disponible o las credenciales están mal, el servidor no
 arranca.
 
 
-6) DOCUMENTACIÓN (Swagger / OpenAPI)
+5) DOCUMENTACIÓN (Swagger / OpenAPI)
 ------------------------------------
 Con la API corriendo:
 
@@ -95,7 +80,7 @@ El título de la documentación es "Produdcts" (así está escrito
 en app/main.py).
 
 
-7) ENDPOINTS DISPONIBLES EN MASTER
+6) ENDPOINTS DISPONIBLES EN MASTER
 ----------------------------------
 En app/main.py están registrados los cuatro routers:
 
@@ -152,16 +137,24 @@ En Swagger aparecen los tags: products, views, suppliers y categories.
                        opcionales como query params
 
     Parámetros de query (todos opcionales):
-        productname : str  -> filtra por nombre de producto
-        categoryname: str  -> filtra por nombre de categoría
+        productname : str  -> filtra por nombre de producto (ILIKE %valor%)
+        categoryname: str  -> filtra por nombre de categoría (ILIKE %valor%)
         discontinued: bool -> filtra por descontinuados / activos
-        stockmin    : int  -> stock mínimo (ge=0)
-        stockmax    : int  -> stock máximo (ge=0)
-        pricemin    : dec  -> precio mínimo (ge=0)
-        pricemax    : dec  -> precio máximo (ge=0)
+        stockmin    : int  -> LIMITE SUPERIOR de stock: stock <= stockmin (ge=0)
+        stockmax    : int  -> LIMITE INFERIOR de stock: stock >= stockmax (ge=0)
+        pricemin    : dec  -> LIMITE SUPERIOR de precio: price <= pricemin (ge=0)
+        pricemax    : dec  -> LIMITE INFERIOR de precio: price >= pricemax (ge=0)
 
-    Ejemplo:
-        http://127.0.0.1:8000/view/?productname=Laptop&categoryname=Electrónica&discontinued=false&stockmin=5&stockmax=100&pricemin=1000&pricemax=9000
+    Ojo: "min" y "max" se usan al revés de la convención. Las
+    descripciones de ViewFilter en schema.py coinciden con lo que
+    hace fn_filterView en back/sql/view.sql.
+
+    Ejemplos:
+        http://127.0.0.1:8000/view/?pricemin=1000
+            -> productos con precio <= 1000
+        http://127.0.0.1:8000/view/?stockmin=100&stockmax=5
+            -> productos con stock entre 5 y 100
+        http://127.0.0.1:8000/view/?productname=Laptop&discontinued=false
 
     Respuesta:
         {"filter": [ { "productid": 1, "product": "...",
@@ -169,19 +162,19 @@ En Swagger aparecen los tags: products, views, suppliers y categories.
                         "category": "...", "supplier": "...",
                         "discontinued": false, "active": true }, ... ]}
 
-    Internamente llama a la funcion de PostgreSQL fn_filterView(
-    p_product, p_category, p_discontinued, p_stockmin, p_stockmax,
-    p_pricemin, p_pricemax). Esa funcion NO está en los scripts de
-    back/sql: tiene que existir en la base de datos.
+    Internamente llama a fn_filterView(p_product, p_category,
+    p_discontinued, p_stockmin, p_stockmax, p_pricemin, p_pricemax),
+    definida en back/sql/view.sql junto con la vista vw_resumen.
+    Si esa vista/función no están creadas en la base, el endpoint
+    devuelve error 400 con el mensaje de PostgreSQL.
 
-    Los filtros numericos validan solo que sean >= 0 (422 si son
-    negativos). Hoy no se valida que min <= max: un rango invertido
-    simplemente devuelve 0 filas. Las descripciones de Swagger para
-    stockmin/stockmax y pricemin/pricemax están invertidas; el
-    comportamiento real lo define fn_filterView.
+    Los filtros numéricos validan solo que sean >= 0 (422 si son
+    negativos). No hay validación de coherencia: con stockmin=5 y
+    stockmax=100 la condición queda stock <= 5 AND stock >= 100 y
+    no devuelve filas.
 
 
-8) OBSERVACIONES IMPORTANTES
+7) OBSERVACIONES IMPORTANTES
 ----------------------------
 - Los DELETE son lógicos: marcan discontinued/active en lugar de
   borrar la fila. Los scripts de back/sql tienen triggers que
@@ -194,11 +187,11 @@ En Swagger aparecen los tags: products, views, suppliers y categories.
 - El .env, .venv, __pycache__ y .vscode están en .gitignore: no se
   suben al repositorio.
 - Si venís de una copia anterior del repo, hacé git pull: master
-  ya incluye los merges (PR #1, #2 y #3) y el commit de CORS.
-  El tip actual antes de esta documentación es ef89bd8.
+  ya incluye los merges (PR #1, #2 y #3), el CORS, el script
+  back/sql/view.sql y las descripciones aclaradas del schema.
 
 
-9) CORS - EN DÓNDE DEBE CORRER EL FRONT
+8) CORS - EN DÓNDE DEBE CORRER EL FRONT
 ---------------------------------------
 La API habilitó CORSMiddleware en app/main.py. El navegador
 permite la llamada solo si el origen (esquema + host + puerto)
@@ -213,7 +206,7 @@ coincide exactamente con uno de estos:
     CRA / Next (opcional):   http://127.0.0.1:3000
                              http://localhost:3000
 
-La API corre en http://127.0.0.1:8000 (sección 5). Desde el
+La API corre en http://127.0.0.1:8000 (sección 4). Desde el
 front las llamadas deben apuntar a ese puerto, por ejemplo:
 
     fetch('http://127.0.0.1:8000/products/')
