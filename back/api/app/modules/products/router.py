@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 from app.modules.products.repository.irepository import IProductRepository
-from app.modules.products.schemas import Product, ProductID, ProductCreate
+from app.modules.products.schemas import Product, ProductID, ProductCreate, ProductUpdate
 
 
 class ProductRouter:
@@ -28,6 +28,7 @@ class ProductRouter:
         self._router.add_api_route('/',self._createProduct,methods=['POST']);
         self.router.add_api_route('/{id}',self._deleteProduct,methods=['DELETE']);
         self.router.add_api_route('/{id}',self._updateProduct,methods=['PUT']);
+        self.router.add_api_route('/{id}/activate',self._activateProduct, methods=['POST']);
 
     def _getProducts(self) -> JSONResponse:
         products : List[Product] = self._repository.findAll();
@@ -64,10 +65,9 @@ class ProductRouter:
 
 
 
-    def _updateProduct(self, id: int, product: ProductCreate = Body()) -> JSONResponse:
+    def _updateProduct(self, id: int, product: ProductUpdate = Body()) -> JSONResponse:
 
-        aux : dict[str,Any] = product.model_dump();
-        prod : Product | None = self._repository.update(Product(productid=id,**aux));
+        prod : Product | None = self._repository.update(ProductID(productid=id), product=product);
 
         if prod is not None:
 
@@ -75,7 +75,15 @@ class ProductRouter:
 
         return JSONResponse(content={'message':'product not updated'},status_code=400);
 
-    
+    def _activateProduct(self, id: int) -> JSONResponse:
+
+        prod = self._repository.activate(ProductID(productid=id));
+
+        if prod is not None:
+            return JSONResponse(content={'message':'product activated', 'product': jsonable_encoder(prod)}, status_code=200);
+
+        return JSONResponse(content={'message':'product not activated'}, status_code=400);
+
 
     @property
     def router(self) -> APIRouter:

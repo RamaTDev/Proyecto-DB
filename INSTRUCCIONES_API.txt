@@ -1,0 +1,206 @@
+========================================================
+CÓMO LEVANTAR LA API - Proyecto DB (FastAPI + PostgreSQL)
+========================================================
+Actualizado después de integrar las ramas prod, suppliers y
+categories en master (PR #1 y PR #2) y de habilitar CORS.
+
+
+1) UBICACIÓN
+------------
+El código de la API está en:
+    /home/rama/Documentos/proyectodb/back/api
+
+Todos los comandos de abajo se ejecutan dentro de esa carpeta:
+    cd /home/rama/Documentos/proyectodb/back/api
+
+
+2) REQUISITOS PREVIOS
+---------------------
+- Python 3.10 o superior (en esta máquina hay Python 3.14.10).
+- PostgreSQL en ejecución y accesible desde la máquina.
+- La base de datos ya creada. Los scripts de back/sql crean
+  funciones/triggers y ALTER TABLE, por lo que asumen que las
+  tablas (products, categories, suppliers, etc.) ya existen.
+
+
+3) ARCHIVO .env (NO se sube a Git)
+---------------------------------
+Dentro de back/api tiene que existir un archivo .env con estas
+5 variables (usá tus propios valores):
+
+    POSTGRES_HOST=localhost
+    POSTGRES_PORT=5432
+    POSTGRES_DB=<nombre_de_la_base>
+    POSTGRES_USER=<usuario>
+    POSTGRES_PASSWORD=<contraseña>
+
+Si falta alguna, POSTGRES_HOST y POSTGRES_PORT por defecto son
+localhost y 5432, pero POSTGRES_DB / USER / PASSWORD son
+obligatorios.
+
+Opcionalmente podés aplicar los scripts SQL con:
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/categories.sql
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/products.sql
+    psql -h <host> -p 5432 -U <usuario> -d <base> -f ../sql/suppliers.sql
+
+
+4) ENTORNO VIRTUAL
+------------------
+El .venv que venía en la carpeta tiene las rutas viejas del
+proyecto (apunta a /proyectodb/api/.venv), así que conviene
+recrearlo:
+
+    cd /home/rama/Documentos/proyectodb/back/api
+    rm -rf .venv
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
+
+En Windows sería: .venv\Scripts\activate
+
+
+5) LEVANTAR LA API
+------------------
+Con el entorno activado y estando en back/api:
+
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+--reload reinicia el servidor al cambiar archivos (solo desarrollo).
+Para production, quitá --reload.
+
+La API intenta conectarse a PostgreSQL apenas se importa
+(app/main.py llama a database.connect()), así que si la base no
+está disponible o las credenciales están mal, el servidor no
+arranca.
+
+
+6) DOCUMENTACIÓN (Swagger / OpenAPI)
+------------------------------------
+Con la API corriendo:
+
+    Documentación interactiva (Swagger UI):
+        http://127.0.0.1:8000/docs
+
+    Documentación alternativa (ReDoc):
+        http://127.0.0.1:8000/redoc
+
+    Especificación OpenAPI en JSON:
+        http://127.0.0.1:8000/openapi.json
+
+Si levantás con --host 0.0.0.0, también podés entrar desde otra
+máquina con http://<IP_DE_LA_MAQUINA>:8000/docs.
+
+El título de la documentación es "Produdcts" (así está escrito
+en app/main.py).
+
+
+7) ENDPOINTS DISPONIBLES EN MASTER
+----------------------------------
+En app/main.py están registrados los tres routers:
+
+    app.include_router(productRouter.router, prefix='/products')
+    app.include_router(supplierRouter.router, prefix='/suppliers')
+    app.include_router(categotyRouter.router, prefix='/categories')
+
+En Swagger aparecen los tags: products, suppliers y categories.
+
+--- PRODUCTS (prefix /products) ---------------------------------
+    GET    /products/              -> lista todos los productos
+    GET    /products/{id}          -> busca un producto por ID
+    POST   /products/              -> crea un producto
+    PUT    /products/{id}          -> actualiza un producto
+    DELETE /products/{id}          -> elimina (baja lógica) un producto
+    POST   /products/{id}/activate -> reactiva un producto
+
+    Body de POST /products/ (ProductCreate):
+        productname, supplierid, categoryid, quantityperunit,
+        unitprice, unitsinstock, unitsonorder, reorderlevel
+
+    Body de PUT /products/{id} (ProductUpdate):
+        los mismos campos más discontinued (bool)
+
+--- SUPPLIERS (prefix /suppliers) -------------------------------
+    GET    /suppliers/              -> lista todos los proveedores
+    GET    /suppliers/{id}          -> busca un proveedor por ID
+    POST   /suppliers/              -> crea un proveedor
+    PUT    /suppliers/{id}          -> actualiza un proveedor
+    DELETE /suppliers/{id}          -> elimina (baja lógica) un proveedor
+    POST   /suppliers/{id}/activate -> reactiva un proveedor
+
+    Body de POST y PUT (SupplierCreate / SupplierUpdate):
+        companyname, contactname, contacttitle, address, city,
+        region, postalcode, country, phone, fax, homepage
+
+--- CATEGORIES (prefix /categories) -----------------------------
+    GET    /categories/              -> lista todas las categorías
+    GET    /categories/{id}          -> busca una categoría por ID
+    POST   /categories/              -> crea una categoría
+    PUT    /categories/{id}          -> actualiza una categoría
+    DELETE /categories/{id}          -> elimina (baja lógica) una categoría
+    POST   /categories/{id}/activate -> reactiva una categoría
+
+    Body de POST y PUT (CategoryCreate):
+        categoryname, description, picture
+
+    Ojo: el repositorio devuelve un mensaje de texto en el campo
+    "message", no el objeto categoría completo como en products.
+
+
+8) OBSERVACIONES IMPORTANTES
+----------------------------
+- Los DELETE son lógicos: marcan discontinued/active en lugar de
+  borrar la fila. Los scripts de back/sql tienen triggers que
+  bloquean el borrado físico en categories.
+- POST /{id}/activate deshace esa baja lógica.
+- El módulo view existe en el historial pero su router está vacío
+  y NO está registrado en app/main.py, así que no tiene endpoints.
+- Los errores de base de datos se devuelven con status 400 y el
+  mensaje en el campo "detail".
+- El .env, .venv, __pycache__ y .vscode están en .gitignore: no se
+  suben al repositorio.
+- Si venís de una copia anterior del repo, hacé git pull: master
+  ya incluye los merges y el commit de CORS (ac8a165).
+
+
+9) CORS - EN DÓNDE DEBE CORRER EL FRONT
+---------------------------------------
+La API habilitó CORSMiddleware en app/main.py. El navegador
+permite la llamada solo si el origen (esquema + host + puerto)
+coincide exactamente con uno de estos:
+
+    Live Server (VS Code):   http://127.0.0.1:5500
+                             http://localhost:5500
+
+    Vite / React:            http://127.0.0.1:5173
+                             http://localhost:5173
+
+    CRA / Next (opcional):   http://127.0.0.1:3000
+                             http://localhost:3000
+
+La API corre en http://127.0.0.1:8000 (sección 5). Desde el
+front las llamadas deben apuntar a ese puerto, por ejemplo:
+
+    fetch('http://127.0.0.1:8000/products/')
+
+No abras el index.html con doble clic (file://): el navegador
+reporta el origen como "null" y CORS no lo acepta. Usá Live
+Server (5500) o npm run dev (5173).
+
+Si cambiás el puerto del front, agregalo a allow_origins en
+back/api/app/main.py. Con --reload la API se reinicia sola;
+si no, reiniciala manualmente.
+
+Verificación rápida del preflight:
+
+    curl -i -X OPTIONS \
+      -H "Origin: http://127.0.0.1:5500" \
+      -H "Access-Control-Request-Method: GET" \
+      http://127.0.0.1:8000/products/
+
+Debe devolver Access-Control-Allow-Origin: http://127.0.0.1:5500
+y Access-Control-Allow-Credentials: true.
+
+allow_credentials=True permite enviar cookies/Authorization,
+por eso no se usa "*" en allow_origins. Cualquier otro puerto
+(por ejemplo 8080) queda rechazado hasta agregarlo a la lista.

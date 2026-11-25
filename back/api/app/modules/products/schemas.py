@@ -27,33 +27,50 @@ class Product(BaseModel):
 
     discontinued : bool
 
+    active : bool
+
+class ProductCreate(BaseModel):
+
+    productname : str | None;
+    
+    supplierid : int | None
+    
+    categoryid :int | None
+    
+    quantityperunit : str | None
+    
+    unitprice : Decimal | None
+    
+    unitsinstock : int | None
+    
+    unitsonorder : int | None
+    
+    reorderlevel : int | None
+
+
+class ProductUpdate(BaseModel):
+
+    productname : str | None
+
+    supplierid : int | None
+
+    categoryid :int | None
+
+    quantityperunit : str | None
+
+    unitprice : Decimal | None
+
+    unitsinstock : int | None
+
+    unitsonorder : int | None
+
+    reorderlevel : int | None
+
+    discontinued : bool 
+
 
 class ProductID(BaseModel):
      
     productid : int
-
-
-class ProductCreate(BaseModel):
-
-     productname : str
-    
-     supplierid : int
-    
-     categoryid :int
-    
-     quantityperunit : str
-    
-     unitprice : Decimal
-    
-     unitsinstock : int
-    
-     unitsonorder : int
-    
-     reorderlevel : int
-    
-     discontinued : bool;
-
-
-
 
 

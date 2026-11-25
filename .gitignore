@@ -1,0 +1,19 @@
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Editors
+.vscode/
+.idea/
+
+# Frontend
+node_modules/
+dist/
+build/
