@@ -55,6 +55,7 @@ class Database():
                 user = os.getenv('POSTGRES_USER'),
                 password = os.getenv('POSTGRES_PASSWORD'),
                 port = os.getenv('POSTGRES_PORT','5432'),
+                sslmode = os.getenv('POSTGRES_SSLMODE','require'),
                 row_factory=dict_row,   
             )
 
