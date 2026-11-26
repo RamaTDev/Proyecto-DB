@@ -1,4 +1,4 @@
-export const API_URL = 'http://127.0.0.1:8000';
+export const API_URL = (window.API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
 
 async function apiRequest(method, path, body) {
   const options = { method, headers: {} };
