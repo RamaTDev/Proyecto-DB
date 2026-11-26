@@ -1,0 +1,40 @@
+
+name: Build
+
+on: 
+  push: 
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+permissions:
+    contents: read
+
+jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Setup Node
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+
+        - name: Build
+          run: npm run build
+          env:
+            API_URL: ${{ vars.API_URL }}
+
+        - name: Verificar artefacto
+          run: |
+            test -f dist/index.html
+            test -f dist/js/config.js
+            grep -q 'window.API_URL' dist/js/config.js
+        
+        - name: Subir artefacto
+          uses: actions/upload-artifact@v4
+          with:
+            name: front-dist
+            path: dist/
