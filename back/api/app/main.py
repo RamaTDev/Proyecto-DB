@@ -4,6 +4,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+
+
 from app.config.database import DataBaseException, Database
 from app.modules.categories.repository.repository import CategoryRepository
 from app.modules.categories.router import CategoryRouter
@@ -14,17 +16,28 @@ from app.modules.view.router import ViewRouter
 from app.modules.suppliers.repository.repository import SupplierRepository
 from app.modules.suppliers.router import SupplierRouter
 
+import os
+
 app = FastAPI(title='Produdcts');
 
 
 """ CORS """
+
+DEFAULT_ORIGINS = (
+    "http://127.0.0.1:5500,http://localhost:5500,"
+    "http://127.0.0.1:5173,http://localhost:5173,"
+    "http://127.0.0.1:3000,http://localhost:3000"
+)
+
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv('CORS_ORIGINS', DEFAULT_ORIGINS).split(',')
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500", "http://localhost:5500",  # Live Server
-        "http://127.0.0.1:5173", "http://localhost:5173",  # Vite / React
-        "http://127.0.0.1:3000", "http://localhost:3000",  # CRA / Next (opcional)
-    ],
+    allow_origins= allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,3 +81,7 @@ async def database_exception_handler(request: Request, exc: DataBaseException) -
         }
     )
 
+
+@app.get('/health')
+async def health():
+    return JSONResponse(content={'status': 'ok'})
