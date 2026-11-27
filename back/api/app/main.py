@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 
 
-from app.config.database import DataBaseException, Database
+from app.config.database import Database, DataBaseException, DatabaseUnavailable
 from app.modules.categories.repository.repository import CategoryRepository
 from app.modules.categories.router import CategoryRouter
 from app.modules.products.repository.repository import ProductRepository
@@ -82,6 +82,26 @@ async def database_exception_handler(request: Request, exc: DataBaseException) -
     )
 
 
+@app.exception_handler(DatabaseUnavailable)
+async def database_unavailable_handler(request: Request, exc: DatabaseUnavailable) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "Base de datos no disponible"
+        }
+
+    )
+
 @app.get('/health')
-async def health():
-    return JSONResponse(content={'status': 'ok'})
+async def health() -> JSONResponse:
+    return JSONResponse(content={
+        'status': 'ok',
+        'db': 'up' if database.isConnected else 'down',
+        })
+
+
+@app.get('/')
+async def home() -> JSONResponse:
+    return JSONResponse(
+        content={'message': 'API ABM'}
+    )

@@ -26,6 +26,14 @@ class DataBaseException(Exception):
     def message(self) -> str:
         return self._message;
 
+class DatabaseUnavailable(Exception):
+
+    def __init__(self, message : str) -> None:
+        self._message = message;
+        super().__init__(self._message)
+
+
+
 class Database():
 
     """Gestiona una conexión retutilizable a Postgres usando psycopg v3"""
@@ -40,6 +48,11 @@ class Database():
     @property
     def isConnected(self) -> bool:
         return self._connection is not None and not self._connection.closed;
+
+
+    def _ensureConnection(self) -> None:
+        if not self.isConnected:
+            self.connect();
 
 
     def connect(self) -> None:
@@ -59,8 +72,8 @@ class Database():
                 row_factory=dict_row,   
             )
 
-        except Exception:
-            raise
+        except psycopg.OperationalError as e:
+            raise DatabaseUnavailable(message='No se pudo conectar a la base de datos') from e;
 
         
     def close(self) -> None:
@@ -75,7 +88,8 @@ class Database():
     def execute(self , sql : LiteralString , params : tuple[Any, ...] | None = None ) -> list[dict[str,Any]] | None :
         """Ejecuta sentencias sql"""
         if not self.isConnected or self._connection is None:
-            raise RuntimeError('No existe una conexion activa en la base de datos');
+            self._ensureConnection();
+            assert self._connection is not None;
 
         try:
 
@@ -99,7 +113,8 @@ class Database():
     def execute_one(self, sql : LiteralString, params : tuple[Any,...] | None = None) -> dict[str,Any] | None :
 
         if not self.isConnected:
-            raise RuntimeError('No existe Conexion a la base de datos');
+            self._ensureConnection();
+            assert self._connection is not None;
 
         try:
 
